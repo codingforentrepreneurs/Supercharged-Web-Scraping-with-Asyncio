@@ -13,19 +13,12 @@ from urllib.parse import urlparse
 import logging
 import structlog # pip install structlog
 
+
+from supercharged.logging import set_arsenic_log_level
+from supercharged.scrapers import scraper
+
 from supercharged.storage import store_links_as_df_pickle
 
-
-def set_arsenic_log_level(level = logging.WARNING):
-    # Create logger
-    logger = logging.getLogger('arsenic')
-
-    # We need factory, to return application-wide logger
-    def logger_factory():
-        return logger
-
-    structlog.configure(logger_factory=logger_factory)
-    logger.setLevel(level)
 
 
 # /en/fabric/7137786-genevieve-floral-by-crystal_walen
@@ -89,37 +82,27 @@ async def get_links(html_r):
         datas.append(data)
     return datas
 
-async def scraper(url, i=-1, timeout=60, start=None):
-    service = services.Chromedriver()
-    browser = browsers.Chrome(chromeOptions={
-        'args': ['--headless', '--disable-gpu']
-    })
-    async with get_session(service, browser) as session:
-        try:
-            await asyncio.wait_for(session.get(url), timeout=timeout)
-        except asyncio.TimeoutError:
-            return []
-        await asyncio.sleep(10)
-        body = await session.get_page_source() # save this locally??
-        content = await get_parsable_html(body) 
-        links = await get_links(content)
-        product_data = await get_product_data(url, content)
-        if start != None:
-            end = time.time() - start
-            print(f'{i} took {end} seconds')
-        # print(body)
-        dataset = {
-            "links": links,
-            "product_data": product_data
-        }
-        return dataset
+async def spoonflower_scraper(url, i=-1, timeout=60, start=None):
+    body = await scraper(url, i=i, timeout=timeout, start=start, body_delay=10) # save this locally??
+    content = await get_parsable_html(body) 
+    links = await get_links(content)
+    product_data = await get_product_data(url, content)
+    if start != None:
+        end = time.time() - start
+        print(f'{i} took {end} seconds')
+    # print(body)
+    dataset = {
+        "links": links,
+        "product_data": product_data
+    }
+    return dataset
 
 
 async def run(urls, timeout=60, start=None):
     results = []
     for i, url in enumerate(urls):
         results.append(
-            asyncio.create_task(scraper(url, i=i, timeout=60, start=start))
+            asyncio.create_task(spoonflower_scraper(url, i=i, timeout=60, start=start))
         )
     list_of_links = await asyncio.gather(*results)
     return list_of_links
