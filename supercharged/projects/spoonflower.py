@@ -97,7 +97,6 @@ async def spoonflower_scraper(url, i=-1, timeout=60, start=None):
     }
     return dataset
 
-
 async def run(urls, timeout=60, start=None):
     results = []
     for i, url in enumerate(urls):
@@ -117,5 +116,6 @@ def run_spoonflower():
     print(results)
     end = time.time() - start
     print(f'total time is {end}')
-    df = store_links_as_df_pickle(results, name=name)
-    print(df.head())
+    return results
+    # df = store_links_as_df_pickle(results, name=name)
+    # print(df.head())
