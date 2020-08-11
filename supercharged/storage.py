@@ -12,7 +12,7 @@ def df_from_sql(table_name='spoonflower_links'):
     return df
 
 def df_to_sql(df, table_name='spoonflower_links', if_exists='replace'):
-    df.to_sql(table_name, db_conn, if_exists=if_exists)
+    df.to_sql(table_name, db_conn, if_exists=if_exists, index=False)
     return df
 
 def list_to_sql(
