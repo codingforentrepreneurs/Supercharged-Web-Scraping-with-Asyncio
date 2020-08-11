@@ -17,7 +17,7 @@ import structlog # pip install structlog
 from supercharged.logging import set_arsenic_log_level
 from supercharged.scrapers import scraper
 
-from supercharged.storage import store_links_as_df_pickle
+from supercharged.storage import list_to_sql
 
 
 
@@ -116,6 +116,20 @@ def run_spoonflower():
     print(results)
     end = time.time() - start
     print(f'total time is {end}')
+    links = [x['links'] for x in results] # [[], [], []]
+    links = itertools.chain.from_iterable(links)
+    links = list(links)
+    link_columns = ['id', 'slug', 'path', 'scraped']
+    list_to_sql(datas=links, 
+        table_name='spoonflower_links',
+        columns=link_columns)
+    product_data = [x['product_data'] for x in results]
+    product_columns = ['id', 'slug', 'path', 'title', 'size', 'price', 'priceCurrency', 'priceValidUntil']
+    list_to_sql(datas=product_data,                 
+            table_name='spoonflower_fabrics', 
+            columns=product_columns)
+
     return results
     # df = store_links_as_df_pickle(results, name=name)
     # print(df.head())
+
