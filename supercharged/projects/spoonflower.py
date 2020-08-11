@@ -9,6 +9,7 @@ import re
 import time
 import pathlib
 from urllib.parse import urlparse
+import random
 
 import logging
 import structlog # pip install structlog
@@ -106,22 +107,41 @@ async def run(urls, timeout=60, start=None):
     list_of_links = await asyncio.gather(*results)
     return list_of_links
 
-def run_spoonflower(use_links=True, limit=10):
+def get_saved_urls(limit=5):
+    links_df = df_from_sql('spoonflower_links')
+    urls = []
+    scraped_ids = []
+    used_df = False
+    if not links_df.empty:
+        sub_links_df = links_df.copy()
+        sub_links_df = sub_links_df[sub_links_df['scraped'] == 0]
+        sub_links_df = sub_links_df.sample(limit)
+        urls = [f"https://www.spoonflower.com{x}" for x in sub_links_df.path.tolist()]
+        scraped_ids = sub_links_df.id.tolist()
+        if len(urls) > 0:
+            used_df = True
+    return urls, scraped_ids, used_df
+
+def get_list_range(limit=10, is_random=True, random_max=150):
+    urls = []
+    for i in range(limit):
+        if is_random:
+            page = random.randint(i+1, random_max)
+        else:
+            page = i + 1
+        urls.append(f"https://www.spoonflower.com/en/shop?on=fabric&page_offset={page}")
+    return urls
+
+def run_spoonflower(use_links=True, use_list_range=False, is_random=True, limit=10):
     set_arsenic_log_level()
     start = time.time()
     urls = ['https://www.spoonflower.com/en/shop?on=fabric']
     scraped_ids = []
     used_df = False
-    if use_links == True:
-        links_df = df_from_sql('spoonflower_links')
-        if not links_df.empty:
-            sub_links_df = links_df.copy()
-            sub_links_df = sub_links_df[sub_links_df['scraped'] == 0]
-            sub_links_df = sub_links_df.sample(limit)
-            urls = [f"https://www.spoonflower.com{x}" for x in sub_links_df.path.tolist()]
-            scraped_ids = sub_links_df.id.tolist()
-            if len(urls) > 0:
-                used_df = True
+    if use_links == True and use_list_range == False:
+        urls, scraped_ids, used_df = get_saved_urls(limit=limit)
+    if use_list_range == True:
+        urls = get_list_range(limit=limit, is_random=is_random)
     results = asyncio.run(run(urls, start=start))
     end = time.time() - start
     links = [x['links'] for x in results] # [[], [], []]
