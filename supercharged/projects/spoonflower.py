@@ -17,7 +17,7 @@ import structlog # pip install structlog
 from supercharged.logging import set_arsenic_log_level
 from supercharged.scrapers import scraper
 
-from supercharged.storage import list_to_sql
+from supercharged.storage import df_from_sql,  df_to_sql, list_to_sql
 
 
 
@@ -106,16 +106,24 @@ async def run(urls, timeout=60, start=None):
     list_of_links = await asyncio.gather(*results)
     return list_of_links
 
-def run_spoonflower():
+def run_spoonflower(use_links=True, limit=10):
     set_arsenic_log_level()
     start = time.time()
-    urls = ['https://www.spoonflower.com/en/shop?on=fabric', 
-            'https://www.spoonflower.com/en/fabric/6444170-catching-fireflies-by-thestorysmith']
-    name = "link.pkl"
+    urls = ['https://www.spoonflower.com/en/shop?on=fabric']
+    scraped_ids = []
+    used_df = False
+    if use_links == True:
+        links_df = df_from_sql('spoonflower_links')
+        if not links_df.empty:
+            sub_links_df = links_df.copy()
+            sub_links_df = sub_links_df[sub_links_df['scraped'] == 0]
+            sub_links_df = sub_links_df.sample(limit)
+            urls = [f"https://www.spoonflower.com{x}" for x in sub_links_df.path.tolist()]
+            scraped_ids = sub_links_df.id.tolist()
+            if len(urls) > 0:
+                used_df = True
     results = asyncio.run(run(urls, start=start))
-    print(results)
     end = time.time() - start
-    print(f'total time is {end}')
     links = [x['links'] for x in results] # [[], [], []]
     links = itertools.chain.from_iterable(links)
     links = list(links)
@@ -128,7 +136,11 @@ def run_spoonflower():
     list_to_sql(datas=product_data,                 
             table_name='spoonflower_fabrics', 
             columns=product_columns)
-
+    if used_df:
+        links_df = df_from_sql('spoonflower_links')
+        link_cond = links_df['id'].isin(scraped_ids)
+        links_df.loc[link_cond, 'scraped'] = 1
+        df_to_sql(links_df, table_name='spoonflower_links')
     return results
     # df = store_links_as_df_pickle(results, name=name)
     # print(df.head())
