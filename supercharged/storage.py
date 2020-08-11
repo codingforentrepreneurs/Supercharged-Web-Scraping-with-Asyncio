@@ -21,6 +21,11 @@ def list_to_sql(
         columns=[],
         unique_col='id',
         keep='first'):
+    if len(datas) == 0:
+        '''
+        No data passed, returning empty dataframe.
+        '''
+        return pd.DataFrame()
     new_df = pd.DataFrame(datas)
     og_df = df_from_sql(table_name=table_name)
     if og_df.empty:
@@ -29,6 +34,13 @@ def list_to_sql(
         df = pd.concat([og_df, new_df])
     df.reset_index(inplace=True, drop=False)
     assert(len(columns)> 0)
+    if not set(columns).issubset(df.columns):
+        '''
+        Invalid columns. 
+        Dataframe does the columns passed
+        in the arugment `columns`
+        '''
+        return pd.DataFrame()
     df = df[columns] # select certain columns
     df = df.loc[~df[unique_col].duplicated(keep=keep)] # make unique
     df.dropna(inplace=True)
