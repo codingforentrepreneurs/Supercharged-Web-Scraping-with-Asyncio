@@ -9,6 +9,9 @@ verify_ssl = true
 jupyter = "*"
 fire = "*"
 sqlalchemy = "*"
+pandas = "*"
+arsenic = "*"
+requests-html = "*"
 
 [requires]
 python_version = "3.8"
