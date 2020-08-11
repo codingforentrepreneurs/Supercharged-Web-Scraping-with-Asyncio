@@ -84,7 +84,7 @@ async def get_links(html_r):
     return datas
 
 async def spoonflower_scraper(url, i=-1, timeout=60, start=None):
-    body = await scraper(url, i=i, timeout=timeout, start=start, body_delay=10) # save this locally??
+    body = await scraper(url, i=i, timeout=timeout, start=start, body_delay=10)
     content = await get_parsable_html(body) 
     links = await get_links(content)
     product_data = await get_product_data(url, content)
@@ -132,7 +132,7 @@ def get_list_range(limit=10, is_random=True, random_max=150):
         urls.append(f"https://www.spoonflower.com/en/shop?on=fabric&page_offset={page}")
     return urls
 
-def run_spoonflower(use_links=True, use_list_range=False, is_random=True, limit=10):
+def run_spoonflower(use_links=True, use_list_range=False, is_random=True, save_csv=False, limit=10):
     set_arsenic_log_level()
     start = time.time()
     urls = ['https://www.spoonflower.com/en/shop?on=fabric']
@@ -161,7 +161,9 @@ def run_spoonflower(use_links=True, use_list_range=False, is_random=True, limit=
         link_cond = links_df['id'].isin(scraped_ids)
         links_df.loc[link_cond, 'scraped'] = 1
         df_to_sql(links_df, table_name='spoonflower_links')
-    return results
-    # df = store_links_as_df_pickle(results, name=name)
-    # print(df.head())
-
+    if save_csv:
+        links_df = df_from_sql('spoonflower_links')
+        links_df.to_csv('spoonflower_links.csv')
+        fabrics_df = df_from_sql('spoonflower_fabrics')
+        fabrics_df.to_csv('spoonflower_fabrics.csv')
+    # return results
