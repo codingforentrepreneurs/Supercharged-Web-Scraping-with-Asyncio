@@ -1,5 +1,11 @@
+bin/
+include/
+share/
+etc/
+
 .DS_Store
 *.pkl
+.pyvenv.cfg
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

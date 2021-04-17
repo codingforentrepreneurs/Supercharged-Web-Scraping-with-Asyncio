@@ -19,3 +19,41 @@ Requirements:
 - Selenium & [chromedriver](https://chromedriver.chromium.org/) installed (watch how in [this one](https://www.codingforentrepreneurs.com/projects/30-days-python-38/day-16-use-selenium-scape-automate-behind-password)).
 
 #### [Watch the series](https://www.codingforentrepreneurs.com/projects/supercharged-web-scraping-with-asyncio)
+
+
+### To use this code:
+
+**1. Clone**
+```bash
+git clone https://github.com/codingforentrepreneurs/Supercharged-Web-Scraping-with-Asyncio supercharged
+```
+
+**2. Create Virtual Environment**
+```bash
+cd supercharged
+python3.6 -m venv .
+```
+
+**3. Activate virtual environment and install requirements**
+Mac/Linux
+```
+source bin/activate
+```
+
+Windows:
+```
+.\Scripts\activate
+```
+
+> If using **pipenv**, run `pipenv shell` && `pipenv install`
+
+
+**Run jupyter**
+```
+jupyter notebook
+```
+or
+```
+python -m jupyter notebook
+```
+> If using **pipenv**, run `pipenv run jupyter notebook`
